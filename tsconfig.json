@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2015",
+    "module": "CommonJS",
+    "outDir": "src/esm",
+    "declaration": true,                        
+    "rootDir": "src",                       
+    "strict": true,
+    "esModuleInterop": true,
+    "declarationMap": true,
+    "moduleResolution": "Node",
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "declarationDir": "src/types"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "loglab",
+  "version": "0.1.0",
+  "description": "A simple npm library for saving and logging",
+  "main": "index.js",
+  "scripts": {
+    "ts": "tsc"
+  },
+  "keywords": [
+    "log",
+    "logging",
+    "logs",
+    "loglab",
+    "logLab"
+  ],
+  "author": "Ilya Nikolaev",
+  "license": "ISC",
+  "dependencies": {
+    "crypto": "^1.0.1",
+    "dayjs": "^1.11.12",
+    "fs": "^0.0.1-security",
+    "kafkajs": "^2.2.4"
+  },
+  "devDependencies": {
+    "@types/kafkajs": "^1.9.0",
+    "@types/node": "^22.5.0",
+    "typescript": "^5.5.4"
+  }
+}
