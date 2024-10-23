@@ -11,7 +11,7 @@ In any case, the solutions and the concept were invented by me personally and im
 ```
 
 ## version
-### v0.3.0
+### v0.3.1
 ## last changes:
-1. Добавлен transportFile - способ передачи логов в файл
-2. Прописсан алгоритм записи данных в файл
+1. Удален дублирующий Handler
+2. Проведен рефакторинг IHandler

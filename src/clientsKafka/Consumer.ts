@@ -1,5 +1,5 @@
 import { IConsumerKafka } from '../models/interfaces/IConsumer';
-import { IMessageHandler, IMessageHandlerSync } from '../models/interfaces/handler/IHandler';
+import { ILogHandlerSync, ILogHandler } from '../models/interfaces/handler/IHandler';
 import { MessageLog, Topic } from '../models/models';
 import { Admin, Consumer, Kafka } from 'kafkajs';
 
@@ -156,7 +156,7 @@ export class ConsumerKafka implements IConsumerKafka {
     await this.disconnectAdmin();
   }
 
-  async kafkaConsumer(Handler: IMessageHandler) {
+  async kafkaConsumer(Handler: ILogHandler) {
     const method: string = 'kafkaConsumer';
     await this.connectConsumer();
     if (!this.consumer) {
@@ -178,7 +178,7 @@ export class ConsumerKafka implements IConsumerKafka {
             await this.connectConsumer();
             return;
           }
-          Handler.messageHandler(logData);
+          Handler.logHandler(logData);
           await this.consumer.commitOffsets([
             { topic: ctx.topic, partition: ctx.partition, offset: (Number(ctx.message.offset) + 1).toString() },
           ]);
@@ -190,7 +190,7 @@ export class ConsumerKafka implements IConsumerKafka {
     });
   }
 
-  async kafkaConsumerSync(Handler: IMessageHandlerSync) {
+  async kafkaConsumerSync(Handler: ILogHandlerSync) {
     const method: string = 'kafkaConsumer';
     await this.connectConsumer();
     if (!this.consumer) {
@@ -212,7 +212,7 @@ export class ConsumerKafka implements IConsumerKafka {
             await this.connectConsumer();
             return;
           }
-          await Handler.messageHandler(logData);
+          await Handler.logHandler(logData);
           await this.consumer.commitOffsets([
             { topic: ctx.topic, partition: ctx.partition, offset: (Number(ctx.message.offset) + 1).toString() },
           ]);
