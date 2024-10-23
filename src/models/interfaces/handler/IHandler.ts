@@ -1,11 +1,11 @@
 import { MessageLog } from '../../models';
 
-export interface IMessageHandler {
+export interface ILogHandler {
   /**
    * Функция обработки данных из брокера Kafka
    * @returns void
    */
-  messageHandler(log: MessageLog): void;
+  logHandler(log: MessageLog): void;
 }
 
 export interface IMessageHandlerSync {
@@ -13,5 +13,5 @@ export interface IMessageHandlerSync {
    * Функция обработки данных из брокера Kafka async
    * @returns Promise<void>
    */
-  messageHandler(log: MessageLog): Promise<void>;
+  logHandler(log: MessageLog): Promise<void>;
 }
