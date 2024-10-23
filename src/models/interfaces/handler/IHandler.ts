@@ -8,7 +8,7 @@ export interface ILogHandler {
   logHandler(log: MessageLog): void;
 }
 
-export interface IMessageHandlerSync {
+export interface ILogHandlerSync {
   /**
    * Функция обработки данных из брокера Kafka async
    * @returns Promise<void>
