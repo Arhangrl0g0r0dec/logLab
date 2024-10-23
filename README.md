@@ -11,9 +11,7 @@ In any case, the solutions and the concept were invented by me personally and im
 ```
 
 ## version
-### 0.2.0
+### v0.3.0
 ## last changes:
-1. Добавлен transportKafka - способ передачи логов через брокер Kafka
-2. Прописсан алгоритм поведения Consumer и Produser брокера сообщений
-3. Добавлены новые структуры для работы новым функционалом
-4. Также создан IMessageHandler, который позволяет реализовать необходимую обработку сообщений при получении их из Kafka
+1. Добавлен transportFile - способ передачи логов в файл
+2. Прописсан алгоритм записи данных в файл
