@@ -32,3 +32,15 @@ export type MessageLog = {
     data: string;
     result?: any;
   };
+
+  export type ConfigKafka = {
+    urls: string[];
+    clientId: string;
+    groupId?: string;
+    levelLog: number;
+  };
+  
+  export type Topic = {
+    topic: string;
+  };
+  
