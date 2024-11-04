@@ -1,3 +1,5 @@
+import { RetryOptions } from "kafkajs";
+
 //default data
 export type MessageLog = {
     server: string | undefined;
@@ -20,7 +22,7 @@ export type MessageLog = {
       responseTime: number;
     };
     time: number;
-    steps: Step[];
+    steps?: Step[];
   };
   
   export type Step = {
@@ -43,4 +45,15 @@ export type MessageLog = {
   export type Topic = {
     topic: string;
   };
-  
+
+  export type SettingsPublisher = {
+    urls?: string[],
+    typeTransport?: number,
+    clientId?: string, 
+    topic?: string, 
+    serverName?: string,
+    pathSaveFile?: string,
+    retry: RetryOptions,
+    isTopic?: boolean,
+    logLevel?: number
+  }

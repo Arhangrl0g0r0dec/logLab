@@ -11,7 +11,10 @@ In any case, the solutions and the concept were invented by me personally and im
 ```
 
 ## version
-### v0.3.1
+### v0.4.0
 ## last changes:
-1. Удален дублирующий Handler
-2. Проведен рефакторинг IHandler
+1. Реализован интерфейс Publisher
+2. Выполнена реализация выбора типов транспортов
+3. Добавлена структура настроек kafka
+4. Доработаны фрагменты методов транспортов, а также публикатора 
+

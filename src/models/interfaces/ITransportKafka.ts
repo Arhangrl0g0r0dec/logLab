@@ -12,5 +12,5 @@ export interface ITransportKafka {
    * Функция создания producer
    * @returns Producer из kafkajs package
    */
-  createProducer(topic: string, serverName: string): ProducerKafka;
+  createProducer(topic?: string, serverName?: string): ProducerKafka;
 }

@@ -33,7 +33,7 @@ export class ProducerKafka implements IProducerKafka {
     });
   }
 
-  private createMessageLog(req: any, res: any, body: any | string, stepsLog: Step[]): MessageLog {
+  private createMessageLog(req: any, res: any, body: any | string, stepsLog?: Step[]): MessageLog {
     const message: MessageLog = {
       server: this.serverName,
       hash: dayjs().valueOf().toString(),
@@ -68,7 +68,7 @@ export class ProducerKafka implements IProducerKafka {
     req: any,
     res: any,
     body: any | string,
-    stepsLog: Step[]
+    stepsLog?: Step[]
   ): Promise<string> {
     const method: string = 'sendLog';
     const dataLog: MessageLog = this.createMessageLog(req, res, body, stepsLog);

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2015",
     "module": "CommonJS",
-    "outDir": "src/esm",
+    "outDir": "lib/esm",
     "declaration": true,                        
     "rootDir": "src",                       
     "strict": true,
@@ -11,7 +11,7 @@
     "moduleResolution": "Node",
     "skipLibCheck": true,
     "sourceMap": true,
-    "declarationDir": "src/types"
+    "declarationDir": "lib/types"
   },
   "include": ["src"],
   "exclude": ["node_modules"]

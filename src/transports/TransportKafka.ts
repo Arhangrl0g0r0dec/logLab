@@ -1,3 +1,4 @@
+import { RetryOptions } from "kafkajs";
 import { ConsumerKafka } from "../clientsKafka/Consumer";
 import { ProducerKafka } from "../clientsKafka/Producer";
 import { ITransportKafka } from "../models/interfaces/ITransportKafka";
@@ -8,9 +9,9 @@ export class TransportKafka implements ITransportKafka {
     private logLevel: number;
     private isTopic: boolean;
 
-    constructor(urls: string[], clientId: string, isTopic?: boolean, logLevel?: number) {
+    constructor(urls: string[], retry: RetryOptions, clientId?: string, isTopic?: boolean, logLevel?: number) {
         this.urls = urls;
-        this.clientId = clientId;
+        this.clientId = clientId ?? 'client';
         this.logLevel = logLevel ? logLevel : 4;
         this.isTopic = isTopic? isTopic : false;
     }
