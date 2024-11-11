@@ -16,17 +16,17 @@ export class Publisher implements IPublisher {
     private isTopic?: boolean;
     private pathSaveFile?: string;
     private serverName?: string;
-    private retryOptions: RetryOptions = {};
+    private retryOptions?: RetryOptions;
 
     constructor(settings: SettingsPublisher) {
         this.topic = settings.topic;
         this.urls = settings.urls;
         this.clientId = settings.clientId;
-        this.logLevel = settings.logLevel ? settings.logLevel : 4;
-        this.pathSaveFile = settings.pathSaveFile;
-        this.retryOptions = settings.retry;
-        this.isTopic = settings.isTopic ? settings.isTopic : false;
-        this.serverName = settings.serverName;
+        this.logLevel = settings.logLevel ?? 4;
+        this.pathSaveFile = settings.pathSaveFile ?? './data/';
+        this.retryOptions = settings.retry ?? {} ;
+        this.isTopic = settings.isTopic ?? false;
+        this.serverName = settings.serverName ?? 'server';
     }
 
     createLog(req: any, res: any, steps: Step[], body?:any): MessageLog {

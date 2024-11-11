@@ -53,7 +53,7 @@ export type MessageLog = {
     topic?: string, 
     serverName?: string,
     pathSaveFile?: string,
-    retry: RetryOptions,
+    retry?: RetryOptions,
     isTopic?: boolean,
     logLevel?: number
   }

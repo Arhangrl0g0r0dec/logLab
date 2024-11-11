@@ -9,7 +9,7 @@ export class TransportKafka implements ITransportKafka {
     private logLevel: number;
     private isTopic: boolean;
 
-    constructor(urls: string[], retry: RetryOptions, clientId?: string, isTopic?: boolean, logLevel?: number) {
+    constructor(urls: string[], retry?: RetryOptions, clientId?: string, isTopic?: boolean, logLevel?: number) {
         this.urls = urls;
         this.clientId = clientId ?? 'client';
         this.logLevel = logLevel ? logLevel : 4;
