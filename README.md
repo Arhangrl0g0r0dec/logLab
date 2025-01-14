@@ -191,7 +191,7 @@ const message: MessageLog = publisher.createLog(req, res, steps, body);
   };
 ```
 ## version
-### v0.4.1
+### v0.4.2
 ## last changes:
 1. Начата работа над инструкцией в README.md
 2. Отредактированы параметры Publisher
