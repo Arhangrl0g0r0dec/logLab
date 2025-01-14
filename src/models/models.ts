@@ -34,7 +34,7 @@ export type MessageLog = {
     data: string;
     result?: any;
   };
-
+  
   export type ConfigKafka = {
     urls: string[];
     clientId: string;

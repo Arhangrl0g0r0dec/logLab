@@ -9,7 +9,7 @@ export class TransportKafka implements ITransportKafka {
     private logLevel: number;
     private isTopic: boolean;
 
-    constructor(urls: string[], retry?: RetryOptions, clientId?: string, isTopic?: boolean, logLevel?: number) {
+    constructor(urls: string[], clientId?: string, isTopic?: boolean, logLevel?: number) {
         this.urls = urls;
         this.clientId = clientId ?? 'client';
         this.logLevel = logLevel ? logLevel : 4;
@@ -21,8 +21,8 @@ export class TransportKafka implements ITransportKafka {
         return consumer;
     }
 
-    createProducer(topic: string, serverName: string): ProducerKafka {
-        const producer = new ProducerKafka(this.urls, this.clientId, topic, serverName, this.isTopic, this.logLevel);
+    createProducer(retry: RetryOptions, pathSaveFile: string, topic: string, serverName: string): ProducerKafka {
+        const producer = new ProducerKafka(this.urls, this.clientId, topic, serverName, pathSaveFile, retry, this.isTopic, this.logLevel);
         return producer;
     }
 }

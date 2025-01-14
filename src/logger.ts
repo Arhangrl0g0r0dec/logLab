@@ -1,4 +1,4 @@
-import { Publisher } from "./logger/Publisher";
+import { Publisher } from "./publisher/Publisher";
 import { IConsumerKafka } from "./models/interfaces/IConsumer";
 import { IProducerKafka } from "./models/interfaces/IProducer";
 import { TransportFile } from "./transports/TransportFile";

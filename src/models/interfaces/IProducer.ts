@@ -7,7 +7,7 @@ export interface IProducerKafka {
    * @param dataLog Тип MessageLog
    * @returns Строку hash | 'Возникла ошибка запроса, повторите попытку снова'
    */
-  sendLog(req: any, res: any, body: any, stepsLog: Step[], isTopic: boolean | undefined): Promise<string>;
+  sendLog(req: any, res: any, stepsLog: Step[], body?: any): Promise<string>;
   /**
    * Функция отключения producer от kafka
    */

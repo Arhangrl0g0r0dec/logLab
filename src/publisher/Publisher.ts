@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import { IPublisher } from "../models/interfaces/IPublisher";
 import { DataStep, MessageLog, SettingsPublisher, Step } from "../models/models";
-import { Kafka, Producer, RetryOptions } from "kafkajs";
+import { RetryOptions } from "kafkajs";
 import { createHash } from "crypto";
 import { TransportFile } from "../transports/TransportFile";
 import { TransportKafka } from "../transports/TransportKafka";
@@ -9,27 +9,29 @@ import { ProducerKafka } from "../clientsKafka/Producer";
 
 export class Publisher implements IPublisher {
 
-    private topic?: string;
+    private topic: string;
     private urls?: string[];
     private clientId?: string;
-    private logLevel?: number;
-    private isTopic?: boolean;
-    private pathSaveFile?: string;
-    private serverName?: string;
-    private retryOptions?: RetryOptions;
+    private logLevel: number;
+    private isTopic: boolean;
+    private pathSaveFile: string;
+    private serverName: string;
+    private retryOptions: RetryOptions;
+    private typeTransport: number;
 
     constructor(settings: SettingsPublisher) {
-        this.topic = settings.topic;
+        this.typeTransport = settings.typeTransport ?? 1;
+        this.topic = settings.topic ?? 'log';
         this.urls = settings.urls;
         this.clientId = settings.clientId;
         this.logLevel = settings.logLevel ?? 4;
         this.pathSaveFile = settings.pathSaveFile ?? './data/';
         this.retryOptions = settings.retry ?? {} ;
         this.isTopic = settings.isTopic ?? false;
-        this.serverName = settings.serverName ?? 'server';
+        this.serverName = settings.serverName ?? 'unknown';
     }
 
-    createLog(req: any, res: any, steps: Step[], body?:any): MessageLog {
+    createLog(req: any, res: any, steps: Step[], body?: any): MessageLog {
         const message: MessageLog = {
             server: this.serverName,
             hash: dayjs().valueOf().toString(),
@@ -47,7 +49,7 @@ export class Publisher implements IPublisher {
             },
             response: {
                 status: res.statusCode,
-                body: body,
+                body: body ?? "Empty",
                 responseTime: dayjs().valueOf(),
             },
             time: dayjs().valueOf() - req.time,
@@ -60,7 +62,7 @@ export class Publisher implements IPublisher {
           return message;
     }
 
-    addNewStep(data: DataStep, steps: Step[], logLevel: string): void {
+    newStep(data: DataStep, steps: Step[], logLevel: string): void {
         const step: Step ={
             level: logLevel,
             dataStep: data
@@ -68,7 +70,7 @@ export class Publisher implements IPublisher {
         steps.push(step);
     }
 
-    async sendLog(req: any, res: any, dataLog: any, typeTransport: number, stepsLog?: Step[], level?: string | number): Promise<string> {
+    private async selectTransportLog(dataLog: any | MessageLog, typeTransport?: number): Promise<string> {
         switch (typeTransport) {
             case 1: {
                 const transportFile: TransportFile = new TransportFile();
@@ -78,10 +80,9 @@ export class Publisher implements IPublisher {
                 if(!this.urls) {
                     throw new Error('Not valid value in brokers kafka'); 
                 } 
-                const transportKafka: TransportKafka = new TransportKafka(this.urls , this.retryOptions, this.clientId,this.isTopic, this.logLevel);
-                transportKafka.createProducer(this.topic ?? 'log', this.serverName ?? 'unknown');
-                const producer: ProducerKafka = transportKafka.createProducer(this.topic ?? 'log', this.serverName ?? 'unknown');
-                return await producer.sendLog(req, res, dataLog, stepsLog);
+                const transportKafka: TransportKafka = new TransportKafka(this.urls , this.clientId, this.isTopic, this.logLevel);
+                const producer: ProducerKafka = transportKafka.createProducer(this.retryOptions, this.pathSaveFile, this.topic, this.serverName);
+                return await producer.sendLog(dataLog);
             }
             case 3: {
                 const transportFile: TransportFile = new TransportFile(this.pathSaveFile);
@@ -89,9 +90,9 @@ export class Publisher implements IPublisher {
                 if(!this.urls) {
                     throw new Error('Not valid value in brokers kafka'); 
                 } 
-                const transportKafka: TransportKafka = new TransportKafka(this.urls, this.retryOptions, this.clientId,this.isTopic, this.logLevel);
-                const producer: ProducerKafka = transportKafka.createProducer(this.topic ?? 'log', this.serverName ?? 'unknown');
-                return await producer.sendLog(req, res, dataLog, stepsLog);
+                const transportKafka: TransportKafka = new TransportKafka(this.urls, this.clientId,this.isTopic, this.logLevel);
+                const producer: ProducerKafka = transportKafka.createProducer(this.retryOptions, this.pathSaveFile, this.topic, this.serverName);
+                return await producer.sendLog(dataLog);
             } 
             default: {
                 const transportFile: TransportFile = new TransportFile(this.pathSaveFile);
@@ -99,5 +100,17 @@ export class Publisher implements IPublisher {
             }
         }
         return '';
+    }
+
+    async sendLog(dataLog: any | MessageLog, typeTransport?: number): Promise<string> {
+        if (!dataLog.hash) {
+            return this.selectTransportLog(typeTransport ?? this.typeTransport);
+        } else {
+            const hash: string = createHash('sha256')
+            .update(String(dataLog) + dayjs().valueOf().toString() + Math.floor(1000 + Math.random() * 9000))
+            .digest('hex');
+            dataLog.hash = hash;
+            return this.selectTransportLog(typeTransport ?? this.typeTransport);
+        }
     }
 }
