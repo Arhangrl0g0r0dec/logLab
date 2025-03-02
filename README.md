@@ -14,10 +14,10 @@ In any case, the solutions and the concept were invented by me personally and im
 ```
 npm i logLab
 ```
-## При работе с библиотекой можно создать два варианта клиента Publisher и Reader
+## При работе с библиотекой можно создать два варианта клиента Publisher
 ### Создание Publisher на основе IPublisher для работы с Apatch Kafka или с файлом.
 ```
-Publisher - это объект, который отвечает за формирование, публикацию и выбор места куда будут записаны логи 
+Publisher - это объект, который отвечает за формирование, публикацию и выбор места куда будут записаны логи
 ```
 ```ts
 // Импортируем все необходимые библиотеки
@@ -191,9 +191,8 @@ const message: MessageLog = publisher.createLog(req, res, steps, body);
   };
 ```
 ## version
-### v0.4.2
+### v0.4.4
 ## last changes:
-1. Начата работа над инструкцией в README.md
-2. Отредактированы параметры Publisher
-3. Доработана логика выбора транспорта и использовния hash для лога
-4. Написана первая версия README.md для Publisher
+1. Убран лишний код связанный с Reader
+2. Окончена работа над первой версией README.md
+
