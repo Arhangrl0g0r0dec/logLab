@@ -191,6 +191,6 @@ const message: MessageLog = publisher.createLog(req, res, steps, body);
   };
 ```
 ## version
-### v0.4.5
+### v0.4.6
 ## last changes:
 1. Поправлен package.json
