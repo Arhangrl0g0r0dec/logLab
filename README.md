@@ -191,8 +191,6 @@ const message: MessageLog = publisher.createLog(req, res, steps, body);
   };
 ```
 ## version
-### v0.4.4
+### v0.4.5
 ## last changes:
-1. Убран лишний код связанный с Reader
-2. Окончена работа над первой версией README.md
-
+1. Поправлен package.json

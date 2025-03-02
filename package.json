@@ -1,8 +1,8 @@
 {
   "name": "loglab",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "A simple npm library for saving and logging",
-  "main": "index.js",
+  "main": "lib/esm/logger.js",
   "scripts": {
     "ts": "tsc"
   },
