@@ -1,3 +1,4 @@
+import { RetryOptions } from 'kafkajs';
 import { ConsumerKafka } from '../../clientsKafka/Consumer';
 import { ProducerKafka } from '../../clientsKafka/Producer';
 
@@ -12,5 +13,5 @@ export interface ITransportKafka {
    * Функция создания producer
    * @returns Producer из kafkajs package
    */
-  createProducer(topic?: string, serverName?: string): ProducerKafka;
+  createProducer(retry: RetryOptions, pathSaveFile: string, topic?: string, serverName?: string): ProducerKafka;
 }

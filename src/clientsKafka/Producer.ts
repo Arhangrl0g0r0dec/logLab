@@ -1,8 +1,9 @@
 import dayjs from 'dayjs';
 import { DataStep, MessageLog, Step } from '../models/models';
 import { createHash } from 'crypto';
-import { Kafka, Producer } from 'kafkajs';
+import { Admin, Kafka, Producer, RetryOptions } from 'kafkajs';
 import { IProducerKafka } from '../models/interfaces/IProducer';
+import fs from 'fs';
 
 export class ProducerKafka implements IProducerKafka {
   private kafka: Kafka | undefined;
@@ -13,8 +14,13 @@ export class ProducerKafka implements IProducerKafka {
   private logLevel: number;
   private isTopic: boolean | undefined;
   private serverName: string;
+  private admin: Admin | undefined;
+  private isWork: boolean;
+  private retryOptions: RetryOptions = {};
+  private isFile: boolean;
+  private pathSaveFile: string;
 
-  constructor(urls: string[], clientId: string, topic: string, serverName: string, isTopic?: boolean, logLevel?: number) {
+  constructor(urls: string[], clientId: string, topic: string, serverName: string, pathSaveFile: string, retry: RetryOptions, isTopic?: boolean, logLevel?: number) {
     this.topic = topic;
     this.urls = urls;
     this.clientId = clientId;
@@ -23,74 +29,138 @@ export class ProducerKafka implements IProducerKafka {
     this.producer = undefined;
     this.isTopic = isTopic ? isTopic : false;
     this.serverName = serverName;
+    this.isWork = true;
+    this.admin = undefined;
+    this.retryOptions = retry;
+    this.isFile = false;
+    this.pathSaveFile = pathSaveFile;
   }
 
-  private createKafka(urls: string[], clientId: string, logLevel?: number) {
+  private createKafka() {
     return new Kafka({
-      clientId,
-      logLevel,
-      brokers: urls,
+      clientId: this.clientId,
+      logLevel: this.logLevel,
+      brokers: this.urls,
+      retry: this.retryOptions
     });
   }
 
-  private createMessageLog(req: any, res: any, body: any | string, stepsLog?: Step[]): MessageLog {
-    const message: MessageLog = {
-      server: this.serverName,
-      hash: dayjs().valueOf().toString(),
-      pid: process.pid,
-      request: {
-        id: req.id,
-        method: req.method,
-        path: req.url,
-        requestTime: req.time,
-        headers: {
-          Host: req.header('Host')?.toString(),
-          ContentType: req.header('Content-Type')?.toString(),
-        },
-        body: req.body,
-      },
-      response: {
-        status: res.statusCode,
-        body: body,
-        responseTime: dayjs().valueOf(),
-      },
-      time: dayjs().valueOf() - req.time,
-      steps: stepsLog,
-    };
+  private async createAdmin(): Promise<any> {
+    const method: string = 'createAdmin';
+    if (!this.kafka) {
+        this.kafka = this.createKafka();
+    }
 
-    message.hash = createHash('sha256')
-      .update(String(message) + dayjs().valueOf().toString() + Math.floor(1000 + Math.random() * 9000))
-      .digest('hex');
-    return message;
+    try {
+        this.kafka.logger().info('Create AdminClient...');
+        if (this.admin) {
+          this.kafka.logger().info('AdminClient allready exists.');
+          return;
+        }
+        this.kafka.logger().info('Create new AdminClient.');
+        this.admin = this.kafka.admin();
+        await this.admin.connect();
+        return;
+    } catch (err) {
+        await this.disconnectAdmin();
+        this.kafka.logger().info(`Error in method ${method}. Error: ${err}`);
+    }
   }
 
-  async sendLog(
-    req: any,
-    res: any,
-    body: any | string,
-    stepsLog?: Step[]
-  ): Promise<string> {
-    const method: string = 'sendLog';
-    const dataLog: MessageLog = this.createMessageLog(req, res, body, stepsLog);
+  private async disconnectAdmin(): Promise<void> {
     if (!this.kafka) {
-      this.kafka = this.createKafka(this.urls, this.clientId, this.logLevel);
+      this.kafka = this.createKafka();
+    }
+    this.kafka.logger().info('Disconnect Admin from kafka.');
+    if (this.admin) await this.admin.disconnect();
+    this.kafka.logger().info('Admin is disconnected.');
+  }
+
+  private sendFile(message: any | MessageLog): void {
+    try {
+      this.isFile = false;
+      let messages: MessageLog[] = [];
+      if(fs.existsSync(`${this.pathSaveFile}/kafkaBridgeLogs.json`)) {
+        const rawdata = fs.readFileSync(`${this.pathSaveFile}/kafkaBridgeLogs.json`);
+        messages = JSON.parse(String(rawdata));
+        messages.push(message);
+        fs.writeFileSync(`${this.pathSaveFile}/kafkaBridgeLogs.json`, `${JSON.stringify(messages)}`);
+      } else {
+        fs.mkdirSync(this.pathSaveFile, { recursive: true });
+        messages.push(message);
+        fs.writeFileSync(`${this.pathSaveFile}/kafkaBridgeLogs.json`, `${JSON.stringify(messages)}`);
+      }
+    } catch(error: unknown) {
+      this.kafka?.logger().error(`Возникла ошибка при записи данных в файл: ${JSON.stringify(error)}`);
+    }
+  }
+
+  async sendLog(dataLog: any | MessageLog): Promise<string> {
+    const method: string = 'sendLog';
+    if (!this.kafka) {
+      this.kafka = this.createKafka();
     }
     try {
-      this.producer = await this.connectProducer(this.isTopic);
-      await this.producer.send({
-        topic: this.topic,
-        messages: [{ key: 'dealersKey', value: JSON.stringify(dataLog) }],
-      });
-      return dataLog.hash;
+      this.isWork = await this.checkKafka();
+      if (!this.isWork) {
+        this.sendFile(dataLog);
+        return dataLog.hash;
+      } else {
+        this.producer = await this.connectProducer(this.isTopic);
+        
+        if(this.isFile) {
+          await this.sendLogFromFile(this.producer);
+        }
+
+        await this.producer.send({
+          topic: this.topic,
+          messages: [{ value: JSON.stringify(dataLog) }],
+        });
+        return dataLog.hash;
+      }
     } catch (error) {
-      this.kafka.logger().error(`Ошибка отправки MessageLog: ${JSON.stringify(dataLog)} в method: ${method}`);
-      return 'Возникла ошибка запроса, повторите попытку снова';
+        this.sendFile(dataLog);
+        this.kafka? this.kafka.logger().error(`Ошибка отправки MessageLog: ${JSON.stringify(dataLog)} в method: ${method}`) : console.log(`Ошибка отправки MessageLog: ${JSON.stringify(dataLog)} в method: ${method}`);
+        return dataLog.hash;
+    }
+  }
+
+  private async sendLogFromFile(producer: Producer): Promise<void> {
+    let messages: MessageLog[] = [];
+      if(fs.existsSync(`${this.pathSaveFile}/kafkaBridgeLogs.json`)) {
+        const rawdata = fs.readFileSync(`${this.pathSaveFile}/kafkaBridgeLogs.json`);
+        messages = JSON.parse(String(rawdata));
+        for(let i = messages.length - 1; i >= 0; i--) {
+          this.kafka?.logger().info(`Message from file was sended to kafka ${messages[i]}`);
+          await producer.send({
+            topic: this.topic,
+            messages: [{ value: JSON.stringify(messages[i]) }],
+          });
+        }
+        fs.unlinkSync(`${this.pathSaveFile}/kafkaBridgeLogs.json`);
+      }
+      return;
+  }
+
+  private async checkKafka(): Promise<boolean> {
+    try {
+      if (!this.admin) {
+        await this.createAdmin();
+      } 
+      const describeCluster = await this.admin?.describeCluster();
+      this.kafka?.logger().info(`Describe kafka is ${describeCluster}`);
+      if(!describeCluster) return false;
+      else return true; 
+
+    } catch(err: unknown) {
+      this.kafka?.logger().error(`Error of function 'checkKafka()' error: ${JSON.stringify(err)}`);
+      return false;
     }
   }
 
   private async connectProducer(isTopic?: boolean | undefined): Promise<Producer> {
     if (!this.kafka) {
-      this.kafka = this.createKafka(this.urls, this.clientId, this.logLevel);
+      this.kafka = this.createKafka();
     }
     if (this.producer) {
       this.kafka.logger().info(`Producer allready exists.`);
@@ -105,7 +175,7 @@ export class ProducerKafka implements IProducerKafka {
 
   async disconnectProducer(): Promise<void> {
     if (!this.kafka) {
-      this.kafka = this.createKafka(this.urls, this.clientId, this.logLevel);
+      this.kafka = this.createKafka();
     }
     this.kafka.logger().info(`Disconnect producer.`);
     if (this.producer) await this.producer.disconnect();
